@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gra Terenowa Pesaro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #111;
+      color: #eee;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background: #222;
+      text-align: center;
+      padding: 1rem;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      background: #333;
+    }
+    nav button {
+      background: #444;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    section {
+      display: none;
+      padding: 1rem;
+      max-width: 800px;
+      margin: auto;
+    }
+    section.active {
+      display: block;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    .image-upload {
+      margin: 1rem 0;
+    }
+    #countdown {
+      font-size: 1.5rem;
+      margin: 1rem 0;
+    }
+    .admin-only {
+      background: #1a1a1a;
+      padding: 1rem;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Gra Terenowa - Sekrety Pesaro</h1>
+</header>
+<nav>
+  <button onclick="showSection('register')">Rejestracja</button>
+  <button onclick="showSection('status')">Status Gry</button>
+  <button onclick="showSection('upload')">Zdjęcia</button>
+  <button onclick="showSection('ranking')">Ranking</button>
+  <button onclick="showSection('chat')">Czat</button>
+  <button onclick="showSection('admin')">Admin</button>
+</nav>
+<section id="register" class="active">
+  <h2>Rejestracja drużyny</h2>
+  <input type="text" id="teamName" placeholder="Nazwa drużyny">
+  <button onclick="registerTeam()">Zarejestruj</button>
+</section>
+<section id="status">
+  <h2>Status gry</h2>
+  <div id="countdown">Czas: -</div>
+</section>
+<section id="upload">
+  <h2>Prześlij zdjęcie</h2>
+  <div class="image-upload">
+    <input type="file" id="taskImage">
+    <button onclick="uploadImage()">Wyślij</button>
+  </div>
+</section>
+<section id="ranking">
+  <h2>Ranking</h2>
+  <div id="rankingList">Brak danych</div>
+</section>
+<section id="chat">
+  <h2>Czat</h2>
+  <div id="chatBox" style="height:200px; overflow-y:auto; border:1px solid #444; padding:0.5rem;"></div>
+  <textarea id="chatInput" placeholder="Wpisz wiadomość..."></textarea>
+  <button onclick="sendChat()">Wyślij</button>
+</section>
+<section id="admin">
+  <h2>Panel Administratora</h2>
+  <div class="admin-only">
+    <input type="password" id="adminPass" placeholder="Hasło admina">
+    <button onclick="loginAdmin()">Zaloguj</button>
+    <div id="adminPanel" style="display:none">
+      <h3>Dodaj punkty</h3>
+      <select id="adminTeam"></select>
+      <input type="number" id="adminPoints" placeholder="Punkty">
+      <button onclick="addPoints()">Dodaj</button>
+
+      <h3>Wiadomość globalna</h3>
+      <textarea id="adminMsg"></textarea>
+      <button onclick="sendAdminMessage()">Wyślij</button>
+
+      <h3>Ustaw czas gry (h)</h3>
+      <input type="number" id="adminTime" value="10">
+      <button onclick="startGame()">Start</button>
+    </div>
+  </div>
+</section>
+<script>
+  let countdownTimer;
+
+  function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function registerTeam() {
+    const name = document.getElementById('teamName').value;
+    localStorage.setItem('teamName', name);
+    alert('Zarejestrowano drużynę: ' + name);
+  }
+  function startGame() {
+    const hours = parseInt(document.getElementById('adminTime').value);
+    const end = Date.now() + hours * 3600000;
+    localStorage.setItem('gameEnd', end);
+    updateCountdown();
+    countdownTimer = setInterval(updateCountdown, 1000);
+    alert('Gra rozpoczęta!');
+  }
+  function updateCountdown() {
+    const end = localStorage.getItem('gameEnd');
+    if (!end) return;
+    const now = Date.now();
+    const diff = end - now;
+    if (diff <= 0) {
+      document.getElementById('countdown').innerText = 'Gra zakończona';
+      clearInterval(countdownTimer);
+      return;
+    }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('countdown').innerText = `Czas: ${h}h ${m}m ${s}s`;
+  }
+  function uploadImage() {
+    alert('Zdjęcie przesłane (symulacja)');
+  }
+  function loginAdmin() {
+    const pass = document.getElementById('adminPass').value;
+    if (pass === 'pesaro2025') {
+      document.getElementById('adminPanel').style.display = 'block';
+      const select = document.getElementById('adminTeam');
+      select.innerHTML = '';
+      const teams = ['Barcelona', 'Kotki'];
+      teams.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t;
+        option.text = t;
+        select.appendChild(option);
+      });
+    } else alert('Błędne hasło');
+  }
+  function addPoints() {
+    const team = document.getElementById('adminTeam').value;
+    const pts = parseInt(document.getElementById('adminPoints').value);
+    const scores = JSON.parse(localStorage.getItem('scores') || '{}');
+    scores[team] = (scores[team] || 0) + pts;
+    localStorage.setItem('scores', JSON.stringify(scores));
+    alert('Punkty dodane');
+    renderRanking();
+  }
+  function renderRanking() {
+    const scores = JSON.parse(localStorage.getItem('scores') || '{}');
+    let html = '';
+    Object.entries(scores).sort((a, b) => b[1] - a[1]).forEach(([team, pts]) => {
+      html += `<p><strong>${team}</strong>: ${pts} pkt</p>`;
+    });
+    document.getElementById('rankingList').innerHTML = html;
+  }
+  function sendAdminMessage() {
+    const msg = document.getElementById('adminMsg').value;
+    const chat = JSON.parse(localStorage.getItem('chat') || '[]');
+    chat.push({ user: 'Admin', text: msg });
+    localStorage.setItem('chat', JSON.stringify(chat));
+    document.getElementById('adminMsg').value = '';
+    renderChat();
+  }
+  function sendChat() {
+    const user = localStorage.getItem('teamName') || 'Nieznana';
+    const text = document.getElementById('chatInput').value;
+    const chat = JSON.parse(localStorage.getItem('chat') || '[]');
+    chat.push({ user, text });
+    localStorage.setItem('chat', JSON.stringify(chat));
+    document.getElementById('chatInput').value = '';
+    renderChat();
+  }
+  function renderChat() {
+    const chat = JSON.parse(localStorage.getItem('chat') || '[]');
+    const box = document.getElementById('chatBox');
+    box.innerHTML = chat.map(c => `<p><strong>${c.user}</strong>: ${c.text}</p>`).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+  setInterval(renderChat, 3000);
+  renderRanking();
+  updateCountdown();
+</script>
+</body>
+</html>
